@@ -1,8 +1,14 @@
 async function getData(dataType, name) {
+
     let url = '';
     let method = 'GET';
     let headers = { 'Content-Type': 'application/json' };
     let body = null;
+
+
+    console.log("dataType", dataType)
+    console.log("name", name)
+
 
     switch (dataType) {
         case 'continent':
@@ -13,12 +19,12 @@ async function getData(dataType, name) {
             break;
         case 'city':
             url = `https://countriesnow.space/api/v0.1/countries/population/cities/${name}`;
-            method = data.method;
-            headers = {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            };
-            body = JSON.stringify(data.body);
+            // method = data.method;
+            // headers = {
+            //     'Accept': 'application/json',
+            //     'Content-Type': 'application/json'
+            // };
+            // body = JSON.stringify(data.body);
             break;
         default:
             throw new Error(`Invalid type: ${type}`);
@@ -27,29 +33,55 @@ async function getData(dataType, name) {
     try {
         const response = await fetch(url, { method, headers, body });
         const json = await response.json();
-        console.log(JSON.stringify(json));
+        return json
     } catch (error) {
         console.error(error);
     }
 }
-async function fetchData(button) {
-    const className = button.className;
-    const url = `https://restcountries.com/v3.1/region/${className}`;
-    const response = await fetch(url);
-    const data = await response.json();
-    console.log(data);
-}
+
+
+
+let currentCountryButtons = [];
 
 // Attach event listener to button
 const buttons = document.querySelectorAll('button');
+
+let container;
+
+// Get the container if it exists
+if (!container) {
+    container = document.getElementById("country-buttons-container");
+
+    // Create the container if it doesn't exist
+    if (!container) {
+        container = document.createElement("div");
+        container.setAttribute("id", "country-buttons-container");
+        document.body.appendChild(container);
+    }
+}
+let existingButtons = container.querySelectorAll("button");
+
+
+let lastClickedButton;
+
+
 buttons.forEach(button => {
     button.addEventListener('click', async event => {
+        const currentButton = event.target;
+
+        // Check if the same button was clicked
+        if (lastClickedButton === currentButton) {
+            return;
+        }
+
+        lastClickedButton = currentButton;
+
         const target = event.target;
-        const continent = target.getAttribute('value');
-        console.log(continent)
-        const url = `https://restcountries.com/v2/region/${continent}`;
-        const response = await fetch(url);
-        const data = await response.json();
+        const targetValue = target.getAttribute('value');
+        const targetType = target.getAttribute('type');
+
+        const data = await getData(targetType, targetValue);
+        console.log("button.addEventListener - data", data);
         const countryNames = data.map(country => country.name);
         console.log(countryNames);
 
@@ -57,20 +89,22 @@ buttons.forEach(button => {
         const countryButtons = countryNames.map(countryName => {
             const button = document.createElement("button");
             button.textContent = countryName;
-            button.classList.add("country");
+            button.setAttribute("value", countryName);
+            button.setAttribute("type", "country");
+            button.classList.add("button");
             return button;
         });
 
-        // remove country buttons from the page
-        const oldCountryButtons = document.querySelectorAll('.country');
-        oldCountryButtons.forEach(button => {
-            button.remove();
-        });
+        // Remove any existing buttons
+        if (existingButtons.length > 0) {
+            existingButtons.forEach(button => button.remove());
+        }
 
-        // add country buttons to the page
+        existingButtons = countryButtons;
+
+        // Add the new buttons
         countryButtons.forEach(button => {
-            document.body.appendChild(button);
+            container.appendChild(button);
         });
     });
 });
-

@@ -1,0 +1,196 @@
+async function getData(dataType, name) {
+
+    let url = '';
+    let method = 'GET';
+    let headers = { 'Content-Type': 'application/json' };
+    let body = null;
+
+
+    console.log("dataType", dataType)
+    console.log("name", name)
+
+
+    switch (dataType) {
+        case 'continent':
+            url = `https://restcountries.com/v2/region/${name}`;
+            break;
+        case 'country':
+            url = `https://restcountries.com/v2/name/${name}`;
+            break;
+        case 'city':
+            url = `https://countriesnow.space/api/v0.1/countries/population/cities/${name}`;
+            break;
+        default:
+            throw new Error(`Invalid type: ${type}`);
+    }
+
+    try {
+        const response = await fetch(url, { method, headers, body });
+        const json = await response.json();
+        return json
+    } catch (error) {
+        console.error(error);
+    }
+}
+async function fetchData(button) {
+    const className = button.className;
+    const url = `https://restcountries.com/v3.1/region/${className}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    console.log(data);
+}
+
+
+
+
+
+// Attach event listener to button
+const buttons = document.querySelectorAll('button');
+
+let container;
+
+// Get the container if it exists
+if (!container) {
+    container = document.getElementById("country-buttons-container");
+
+    // Create the container if it doesn't exist
+    if (!container) {
+        container = document.createElement("div");
+        container.setAttribute("id", "country-buttons-container");
+        document.body.appendChild(container);
+    }
+}
+
+let existingButtons = container.querySelectorAll("button");
+let countryNames = [];
+let cityNames = [];
+
+buttons.forEach(button => {
+    button.addEventListener('click', async event => {
+        const target = event.target;
+        const targetValue = target.getAttribute('value');
+        const targetType = target.getAttribute('type');
+        // console.log("button.addEventListener - targetValue", targetValue);
+        const data = await getData(targetType, targetValue);
+        console.log("button.addEventListener - data", data);
+        if(targetType === 'continent') {
+            if(targetValue === 'all') {
+        countryNames = data.map(country => country.name);
+        console.log(countryNames);
+            handleClicksRequest(countryNames)
+        } else if (targetType === 'country') {
+            const cityNames = data.map(city => city.name);
+            console.log(cityNames);
+        } else if (targetType === 'city') {
+            const citiesPopulation = data.map(city => city.name);
+            console.log(citiesPopulation);
+        }
+    }
+
+        function handleClicksRequest(typeRequest){
+        if (typeRequest === countryNames){
+                    const countryButtons = countryNames.map(countryName => {
+                    const button = document.createElement("button");
+                    button.textContent = countryName;
+                    button.setAttribute("value", countryName);
+                    button.setAttribute("type", "country");
+                    button.classList.add("button");
+                    return button;
+                });
+            // Remove any existing buttons
+            if (existingButtons.length > 0) {
+                existingButtons.forEach(button => button.remove());
+            } else {           
+            // Add the new buttons
+            existingButtons.forEach(button => {
+                container.appendChild(button);
+            });
+        }
+    }
+
+ }
+
+
+           
+      
+    });
+});
+
+
+
+
+
+
+// async function createChart(data) {
+//     console.log("createChart", data)
+//     const ctx = document.getElementById('myChart').getContext('2d');
+//     const myChart = new Chart(ctx, {
+//         type: 'bar',
+//         data: {
+//             labels: data.map(country => country.name),
+//             datasets: [{
+//                 label: '# of Votes',
+//                 data: data.map(country => country.population),
+//                 backgroundColor: [
+//                     'rgba(255, 99, 132, 0.2)',
+//                     'rgba(54, 162, 235, 0.2)',
+//                     'rgba(255, 206, 86, 0.2)',
+//                     'rgba(75, 192, 192, 0.2)',
+//                     'rgba(153, 102, 255, 0.2)',
+//                     'rgba(255, 159, 64, 0.2)'
+//                 ],
+//                 borderColor: [
+//                     'rgba(255, 99, 132, 1)',
+//                     'rgba(54, 162, 235, 1)',
+//                     'rgba(255, 206, 86, 1)',
+//                     'rgba(75, 192, 192, 1)',
+//                     'rgba(153, 102, 255, 1)',
+//                     'rgba(255, 159, 64, 1)'
+//                 ],
+//                 borderWidth: 1
+//             }]
+//         },
+//         options: {
+//             scales: {
+//                 y: {
+//                     beginAtZero: true,
+//                     ticks: {
+//                         callback: function (value) {
+//                             return value.toLocaleString();
+//                         },
+//                     },
+//                 },
+//             },
+//         },
+//     });
+//     return myChart;   
+// }
+
+// async function fetchData(button) {
+//     const className = button.className;
+//     const url = `https://restcountries.com/v3.1/region/${className}`;
+//     const response = await fetch(url);
+//     const data = await response.json();
+//     console.log(data);
+//     createChart(data);
+// }
+
+// const btns = document.querySelectorAll('button');
+// btns.forEach(btn => {
+//     btn.addEventListener('click', event => {
+//         fetchData(event.target);
+//     });
+// }
+// )
+
+
+
+
+
+
+
+
+
+
+
+    
