@@ -52,5 +52,25 @@ buttons.forEach(button => {
         const data = await response.json();
         const countryNames = data.map(country => country.name);
         console.log(countryNames);
+
+        // Create buttons for each country
+        const countryButtons = countryNames.map(countryName => {
+            const button = document.createElement("button");
+            button.textContent = countryName;
+            button.classList.add("country");
+            return button;
+        });
+
+        // remove country buttons from the page
+        const oldCountryButtons = document.querySelectorAll('.country');
+        oldCountryButtons.forEach(button => {
+            button.remove();
+        });
+
+        // add country buttons to the page
+        countryButtons.forEach(button => {
+            document.body.appendChild(button);
+        });
     });
 });
+
