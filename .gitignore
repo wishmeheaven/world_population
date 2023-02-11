@@ -1,3 +1,613 @@
+05:25 12.02.23 sssemek - draft txt from - not there yert
+new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: newArray,
+      datasets: [
+        {
+          label: "population of the countries",
+          data: population,
+          borderWidth: 1,
+        },
+      ],
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+        },
+      },
+    },
+  });
+}
+Eric Chukoltyansky  to  Everyone 17:38
+const makeChart=(countries, population)=>{
+    if(myChart!=undefined){
+        myChart.destroy()
+    }
+    const data = {
+        labels: countries,
+        datasets: [{
+          label: 'population',
+          backgroundColor: '#407076',
+          borderColor: '#97B1A6',
+          data: population,
+        }]
+      };
+    
+      const config = {
+        type: 'bar',
+        data: data,
+        options: {}
+      };
+    
+      myChart = new Chart(
+        document.getElementById('myChart'),
+        config
+      );
+}
+mika givner  to  Everyone 18:50
+if (isChart === true) {
+    myChart.destroy();
+  }
+  isChart = true;
+function draw(arrOfContinentsCountry, arrOfPopulationsCountry) {
+  arrOfCities = [];
+  arrOfPopulationsCities = [];
+  if (isChart === true) {
+    myChart.destroy();
+  }
+  isChart = true;
+  myChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: arrOfContinentsCountry,
+      datasets: [
+        {
+          label: "# of Population",
+          data: arrOfPopulationsCountry,
+          borderWidth: 1,
+        },
+      ],
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+        },
+      },
+    },
+  });
+}
+
+
+
+01:00 12.02.23
+
+// async function getData(dataType, name) {
+//     let url = '';
+//     let method = 'GET';
+//     let headers = { 'Content-Type': 'application/json' };
+//     let body = null;
+
+    
+
+//     switch (dataType) {
+//         case 'continent':
+//             url = `https://restcountries.com/v2/region/${name}`;
+//             break;
+//         case 'country':
+//             url = `https://countriesnow.space/api/v0.1/countries/population/cities`;
+//             break;
+//         case 'cities':
+//             url = `https://countriesnow.space/api/v0.1/countries/population/cities`;
+//             break;
+//         default:
+//             throw new Error(`Invalid type: ${type}`);
+//     }
+
+//     try {
+//         const response = await fetch(url, { method, headers, body });
+//         const json = await response.json();
+//         return json;
+//     } catch (error) {
+//         console.error(error);
+//     }
+// }
+
+async function getData(dataType, name) {
+    let url;
+    const method = "GET";
+    const headers = {
+        "Content-Type": "application/json"
+    };
+    let body;
+
+    switch (dataType) {
+        case 'continent':
+            url = `https://restcountries.com/v2/region/${name}`;
+            break;
+        case 'country':
+            url = `https://countriesnow.space/api/v0.1/countries/population/cities`;
+            break;
+        case 'cities':
+            url = `https://countriesnow.space/api/v0.1/countries/population/cities/${name}`;
+            break;
+        default:
+            throw new Error(`Invalid type: ${type}`);
+    }
+
+    try {
+        const response = await fetch(url, { method, headers, body });
+        const json = await response.json();
+        return json;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+
+let buttons = document.querySelectorAll('button');
+
+let container;
+
+// Get the container if it exists
+if (!container) {
+    container = document.getElementById('country-buttons-container');
+
+    // Create the container if it doesn't exist
+    if (!container) {
+        container = document.createElement('div');
+        container.setAttribute('id', 'country-buttons-container');
+        document.body.appendChild(container);
+    }
+}
+let existingButtons = container.querySelectorAll('button');
+
+let lastClickedButton;
+
+
+
+document.addEventListener("click", async event => {
+    const target = event.target;
+
+    console.log('document.addEventListener - target', target)
+
+        // Check if the same button was clicked
+    if (lastClickedButton === target) {
+            return; }
+
+    lastClickedButton = target;
+
+    // Check if the target is a button
+    // if (!target.matches("button")) return;
+
+    const targetValue = target.getAttribute("value");
+    const targetType = target.getAttribute("type");
+
+    const data = await getData(targetType, targetValue);
+
+    // Delegate the event to the appropriate function based on the button type
+    if (targetType === "continent") {
+        console.log(data)
+        handleClick(data.map(country => country.name), "country");
+    } else if (targetType === "country") {
+        console.log("data",data)
+        handleClick(data.map(el => el.data), "city");
+    } else if (targetType === "city") {
+        console.log(data.map(el => el.data));
+    }
+});
+
+function processData(data) {
+    const processedData = data.data.map(cityData => {
+        return {
+            city: cityData.city,
+            country: cityData.country,
+            population: cityData.populationCounts[0].value
+        };
+    });
+
+    return processedData;
+}
+
+function handleClick(data, type) {
+    let buttons = [];
+
+    console.log("data", data)
+    console.log("type", type)
+
+    let currentCountryButtons = [];
+    let currentCityButtons = [];
+
+    // Generate country buttons
+    function generateCountryButtons(data) {
+        let buttons = data.map(country => {
+            let button = document.createElement("button");
+            button.innerText = country.name;
+            button.addEventListener("click", () => {
+                handleCountryClick(country);
+            });
+            return button;
+        });
+
+        // Remove any existing country buttons
+        if (currentCountryButtons.length > 0) {
+            currentCountryButtons.forEach(button => button.remove());
+        }
+
+        currentCountryButtons = buttons;
+
+        // Add the new country buttons
+        buttons.forEach(button => {
+            container.appendChild(button);
+        });
+    }
+
+    // Generate city buttons
+    function generateCityButtons(data) {
+        let buttons = data.map(city => {
+            let button = document.createElement("button");
+            button.innerText = city.city;
+            button.addEventListener("click", () => {
+                handleCityClick(city);
+            });
+            return button;
+        });
+
+        // Remove any existing city buttons
+        if (currentCityButtons.length > 0) {
+            currentCityButtons.forEach(button => button.remove());
+        }
+
+        currentCityButtons = buttons;
+
+        // Add the new city buttons
+        buttons.forEach(button => {
+            container.appendChild(button);
+        });
+    }
+
+    // Call the appropriate function based on the type
+    if (type === 'country') {
+        generateCountryButtons(data);
+    } else if (type === 'city') {
+        generateCityButtons(buttons);
+    }
+}
+
+
+//     if (type === 'continent') {
+//         buttons = data.map(name => {
+//             let button = document.createElement("button");
+//             button.textContent = name;
+//             button.setAttribute("value", name);
+//             button.setAttribute("type", type);
+//             button.classList.add("country");
+//             return button;
+//         });
+//     }
+    
+//     if (type === 'country') {
+//         let processedData = processData(data);
+//         buttons = processedData.map(city => {
+//             const button = document.createElement("button");
+//             button.textContent = city.city;
+//             button.setAttribute("value", city.city);
+//             button.setAttribute("type", type);
+//             button.classList.add("city");
+//             return button;
+//         });
+//     }
+
+//     let currentCountryButtons = [];
+//     let currentCityButtons = [];
+
+//     // Generate country buttons
+//     function generateCountryButtons(data) {
+//         let buttons = data.map(country => {
+//             let button = document.createElement("button");
+//             button.innerText = country.name;
+//             button.addEventListener("click", () => {
+//                 handleCountryClick(country);
+//             });
+//             return button;
+//         });
+
+//         // Remove any existing country buttons
+//         if (currentCountryButtons.length > 0) {
+//             currentCountryButtons.forEach(button => button.remove());
+//         }
+
+//         currentCountryButtons = buttons;
+
+//         // Add the new country buttons
+//         buttons.forEach(button => {
+//             container.appendChild(button);
+//         });
+//     }
+
+//     // Generate city buttons
+//     function generateCityButtons(data) {
+//         let buttons = data.map(city => {
+//             let button = document.createElement("button");
+//             button.innerText = city.city;
+//             button.addEventListener("click", () => {
+//                 handleCityClick(city);
+//             });
+//             return button;
+//         });
+
+//         // Remove any existing city buttons
+//         if (currentCityButtons.length > 0) {
+//             currentCityButtons.forEach(button => button.remove());
+//         }
+
+//         currentCityButtons = buttons;
+
+//         // Add the new city buttons
+//         buttons.forEach(button => {
+//             container.appendChild(button);
+//         });
+//     }
+
+//     // Call the appropriate function based on the type
+//     if (type === 'country') {
+//         generateCountryButtons(data);
+//     } else if (type === 'city') {
+//         generateCityButtons(buttons);
+//     }
+// }
+
+// function handleClick(data, type) {
+//     // let buttons = [];
+//     if (type === 'country') {
+//         buttons = data.map(name => {
+//             let button = document.createElement("button");
+//             button.textContent = name;
+//             button.setAttribute("value", name);
+//             button.setAttribute("type", type);
+//             button.classList.add("country");
+//             return button;
+//         });
+//     }
+//     if(type === 'city') {   
+//         buttons = data.map(name => {
+//             const button = document.createElement("button");
+//             button.textContent = name;
+//             button.setAttribute("value", name);
+//             button.setAttribute("type", type);
+//             button.classList.add("city");
+//             return button;
+//         });
+//         let processedData = processData(data);
+//     }
+
+//     let currentCountryButtons = [];
+//     let currentCityButtons = [];
+
+//     // Generate country buttons
+//     function generateCountryButtons(data) {
+//         let buttons = data.map(country => {
+//             let button = document.createElement("button");
+//             button.innerText = country.name;
+//             button.addEventListener("click", () => {
+//                 handleCountryClick(country);
+//             });
+//             return button;
+//         });
+
+//         // Remove any existing country buttons
+//         if (currentCountryButtons.length > 0) {
+//             currentCountryButtons.forEach(button => button.remove());
+//         }
+
+//         currentCountryButtons = buttons;
+
+//         // Add the new country buttons
+//         buttons.forEach(button => {
+//             container.appendChild(button);
+//         });
+//     }
+
+//     // Generate city buttons
+//     function generateCityButtons(data) {
+//         let buttons = data.map(city => {
+//             let button = document.createElement("button");
+//             button.innerText = city.name;
+//             button.addEventListener("click", () => {
+//                 handleCityClick(city);
+//             });
+//             return button;
+//         });
+
+//         // Remove any existing city buttons
+//         if (currentCityButtons.length > 0) {
+//             currentCityButtons.forEach(button => button.remove());
+//         }
+
+//         currentCityButtons = buttons;
+
+//         // Add the new city buttons
+//         buttons.forEach(button => {
+//             container.appendChild(button);
+//         });
+//     }
+// }
+
+
+
+
+
+    // Remove any existing buttons
+    // if (currentCountryButtons.length > 0) {
+    //     currentCountryButtons.forEach(button => button.remove());
+    // }
+
+    // currentCountryButtons = buttons;
+
+    // // Add the new buttons
+    // buttons.forEach(button => {
+    //     container.appendChild(button);
+    // });
+
+// Handle country button click
+// function handleCountryClick(country) {
+//     // Fetch cities data for the selected country
+//     fetch(`https://api.openaq.org/v1/cities?country=${country.code}`)
+//         .then(response => response.json())
+//         .then(data => {
+//             // Check if cities data is available for the selected country
+//             if (data && data.results && data.results.length > 0) {
+//                 // Generate buttons for the cities of the selected country
+//                 generateCityButtons(data.results);
+//             } else {
+//                 console.error("No cities data available for the selected country");
+//             }
+//         })
+//         .catch(error => {
+//             console.error("Error fetching cities data:", error);
+//         });
+// }
+
+
+
+
+
+
+
+friday 10.02.23  22:40
+
+async function getData(dataType, name) {
+
+    let url = '';
+    let method = 'GET';
+    let headers = { 'Content-Type': 'application/json' };
+    let body = null;
+
+
+    switch (dataType) {
+        case 'continent':
+            url = `https://restcountries.com/v2/region/${name}`;
+            break;
+        case 'country':
+            url = `https://restcountries.com/v2/name/${name}`;
+            break;
+        case 'cities':
+            url = `https://countriesnow.space/api/v0.1/countries/population/cities`;
+            break;
+        default:
+            throw new Error(`Invalid type: ${type}`);
+    }
+
+    try {
+        const response = await fetch(url, { method, headers, body });
+        const json = await response.json();
+        return json
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+
+
+let currentCountryButtons = [];
+
+// Attach event listener to button
+const buttons = document.querySelectorAll('button');
+
+let container;
+
+// Get the container if it exists
+if (!container) {
+    container = document.getElementById("country-buttons-container");
+
+    // Create the container if it doesn't exist
+    if (!container) {
+        container = document.createElement("div");
+        container.setAttribute("id", "country-buttons-container");
+        document.body.appendChild(container);
+    }
+}
+let existingButtons = container.querySelectorAll("button");
+
+
+let lastClickedButton;
+
+
+buttons.forEach(button => {
+    button.addEventListener('click', async event => {
+        const currentButton = event.target;
+
+        // Check if the same button was clicked
+        if (lastClickedButton === currentButton) {
+            return;
+        }
+
+        lastClickedButton = currentButton;
+
+        const target = event.target;
+        const targetValue = target.getAttribute('value');
+        const targetType = target.getAttribute('type');
+
+        const data = await getData(targetType, targetValue);
+
+        console.log("button.addEventListener - data", data);
+
+        if (targetType === 'continent') {
+            countryNames = data.map(country => country.name);
+            console.log(countryNames);
+            handleClick(countryNames)
+        } else if (targetType === 'country') {
+            const cityNames = data.map(el => el.data);
+            console.log(cityNames);
+        } else if (targetType === 'city') {
+                const citiesPopulation = data.map(el => el.data);
+                console.log(citiesPopulation);
+            }
+    })
+})
+
+
+function handleClick(countryNames) {
+    countryButtons = countryNames.map(countryName => {
+        const button = document.createElement("button");
+        button.textContent = countryName;
+        button.setAttribute("value", countryName);
+        button.setAttribute("type", "country");
+        button.classList.add("button");
+        return button;
+    });
+
+    // Remove any existing buttons
+    if (currentCountryButtons.length > 0) {
+        currentCountryButtons.forEach(button => button.remove());
+    }
+
+    currentCountryButtons = countryButtons;
+    console.log(currentCountryButtons)
+
+    // Add the new buttons
+    countryButtons.forEach(button => {
+        container.appendChild(button);
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+friday 19:15   - 10.02.23
 async function getData(dataType, name) {
 
     let url = '';

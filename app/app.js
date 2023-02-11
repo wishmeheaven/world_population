@@ -1,13 +1,30 @@
+
 async function getData(dataType, name) {
-
     let url = '';
-    let method = 'GET';
-    let headers = { 'Content-Type': 'application/json' };
+    const method = "GET";
+    const headers = {
+        "Content-Type": "application/json"
+    };
     let body = null;
+    try {
 
+        //countryCities
+        // url = "https://countriesnow.space/api/v0.1/countries"
 
-    console.log("dataType", dataType)
-    console.log("name", name)
+        // citiesPopulation
+        // url = "https://countriesnow.space/api/v0.1/countries/population/cities"
+
+        //countriesPopulation
+        // url  = "https://countriesnow.space/api/v0.1/countries/countries/population"
+
+        const response = await fetch(url, { method, headers, body });
+        const json = await response.json();
+        console.log("json", json)
+    } catch (error) {
+        console.error(error);
+    }
+
+    
 
 
     switch (dataType) {
@@ -15,16 +32,22 @@ async function getData(dataType, name) {
             url = `https://restcountries.com/v2/region/${name}`;
             break;
         case 'country':
-            url = `https://restcountries.com/v2/name/${name}`;
+            url = fetch('https://countriesnow.space/api/v0.1/countries/population/cities/filter', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "limit": 1000,
+                        "order": "asc",
+                        "orderBy": "name",
+                        "country": `${name}`
+                    })
+                })
             break;
-        case 'city':
+        case 'cities':
             url = `https://countriesnow.space/api/v0.1/countries/population/cities/${name}`;
-            // method = data.method;
-            // headers = {
-            //     'Accept': 'application/json',
-            //     'Content-Type': 'application/json'
-            // };
-            // body = JSON.stringify(data.body);
             break;
         default:
             throw new Error(`Invalid type: ${type}`);
@@ -33,78 +56,130 @@ async function getData(dataType, name) {
     try {
         const response = await fetch(url, { method, headers, body });
         const json = await response.json();
-        return json
+        console.log("json", json)
+
+        if(dataType === 'country'){        
+            localStorage.setItem('country', JSON.stringify(json))
+            localStorage.setItem('countryName', name)
+            localStorage.setItem('countryData', JSON.stringify(json.data))
+        } else if(dataType === 'cities'){
+            localStorage.setItem('city', JSON.stringify(json))
+            localStorage.setItem('cityName', name)
+            localStorage.setItem('cityData', JSON.stringify(json.data))
+            localStorage.setItem('cityPopulation', JSON.stringify(json.data[0].populationCounts[0].value))
+            localStorage.setItem('cityCountry', JSON.stringify(json.data[0].country))        
+        }
+        return json;
     } catch (error) {
         console.error(error);
     }
 }
 
-
-
-let currentCountryButtons = [];
-
-// Attach event listener to button
-const buttons = document.querySelectorAll('button');
+let buttons = document.querySelectorAll('button');
 
 let container;
 
 // Get the container if it exists
-if (!container) {
-    container = document.getElementById("country-buttons-container");
-
-    // Create the container if it doesn't exist
-    if (!container) {
-        container = document.createElement("div");
-        container.setAttribute("id", "country-buttons-container");
-        document.body.appendChild(container);
-    }
+if (container) {
+    container = document.getElementById('country-buttons-container');
+} else if (!container) {
+    container = document.createElement('div');
+    container.setAttribute('id', 'country-buttons-container');
+    document.body.appendChild(container);
 }
-let existingButtons = container.querySelectorAll("button");
 
 
+let existingButtons = container.querySelectorAll('button');
+let countryNames = [];
+let cityNames = []
+let currentCountryButtons = [];
 let lastClickedButton;
 
 
-buttons.forEach(button => {
-    button.addEventListener('click', async event => {
-        const currentButton = event.target;
 
-        // Check if the same button was clicked
-        if (lastClickedButton === currentButton) {
-            return;
-        }
+document.addEventListener("click", async event => {
+    const target = event.target;
 
-        lastClickedButton = currentButton;
+    console.log('document.addEventListener - target', target)
 
-        const target = event.target;
-        const targetValue = target.getAttribute('value');
-        const targetType = target.getAttribute('type');
 
-        const data = await getData(targetType, targetValue);
-        console.log("button.addEventListener - data", data);
-        const countryNames = data.map(country => country.name);
-        console.log(countryNames);
+    // Check if the same button was clicked
+    if (lastClickedButton === target) {
+        return;
+    }
 
-        // Create buttons for each country
-        const countryButtons = countryNames.map(countryName => {
+    lastClickedButton = target;
+
+    const targetValue = target.getAttribute('value');
+    const targetType = target.getAttribute('type');
+
+    const data = await getData(targetType, targetValue);
+
+    console.log("typeofData", typeof data)
+
+    console.log("button.addEventListener - data", data);
+    // Delegate the event to the appropriate function based on the button type
+    if (targetType === "continent") {
+        countryNames = data.map(continent => continent.name)
+        handleClick(countryNames);
+    } else if (targetType === "country") {
+        console.log("data", data.data)
+        cityNames = data.data.map(country => country.city)
+        // data.map(country => country.city)
+        handleClick(cityNames);
+        // handleClick(data.map(el => el.data), "city");
+    } else if (targetType === "city") {
+        console.log(data.map(el => el.data));
+    }
+});
+
+function processData(data) {
+    const processedData = data.data.map(cityData => {
+        return {
+            city: cityData.city,
+            country: cityData.country,
+            population: cityData.populationCounts[0].value
+        };
+    });
+
+    return processedData;
+}
+
+
+function handleClick(requestedType) {
+    // let buttons = []
+    console.log("handleClick - data", requestedType)
+    // console.log("handleClick - type", type)
+    if (requestedType === countryNames) {
+        buttons = countryNames.map(name => {
             const button = document.createElement("button");
-            button.textContent = countryName;
-            button.setAttribute("value", countryName);
+            button.textContent = name;
+            button.setAttribute("value", name);
             button.setAttribute("type", "country");
             button.classList.add("button");
             return button;
         });
-
-        // Remove any existing buttons
-        if (existingButtons.length > 0) {
-            existingButtons.forEach(button => button.remove());
-        }
-
-        existingButtons = countryButtons;
-
-        // Add the new buttons
-        countryButtons.forEach(button => {
-            container.appendChild(button);
+    } else if (requestedType === cityNames){
+        buttons = data.map(name => {
+            const button = document.createElement("button");
+            button.textContent = name;
+            button.setAttribute("value", name);
+            button.setAttribute("type", type);
+            button.classList.add("city");
+            return button;
         });
+        // let processedData = processData(data);
+    }
+    console.log(existingButtons.length)
+    // Remove existing buttons
+    if (existingButtons.length > 0) {
+        existingButtons.forEach(button => button.remove());
+    }
+    // Add the new buttons
+    buttons.forEach(button => {
+        container.appendChild(button);
     });
-});
+    existingButtons = buttons
+}
+
+

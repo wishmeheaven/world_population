@@ -3,11 +3,36 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Launch Program",
+      "program": "${workspaceFolder}/app.js",
+      "request": "launch",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "node"
+    },
+    {
+      "name": "Attach",
+      "port": 9229,
+      "request": "attach",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "node"
+    },
+  {
+    "name": "Launch Chrome",
+    "request": "launch",
+    "type": "chrome",
+    "url": "http://localhost:8080",
+    "webRoot": "${workspaceFolder}"
+  },
+    {
       "type": "pwa-node",
       "request": "launch",
       "name": "Launch URL Shortener",
       "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/src/server.js"
+      // "program": "${workspaceFolder}/src/server.js"
     }
   ]
 }
