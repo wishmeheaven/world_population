@@ -1,37 +1,8 @@
 'use strict';
 
-// =================== init ===================
-// =================== clickEventsHandler ===================
-// =================== UIHandler ===================
-// =================== chartsHandler ===================
-// =================== storageHandler ===================
-// =================== fetchDataHandler ===================
-
-
-// const btnEurope = document.querySelector('.europe');
-// const btnAsia = document.querySelector('.asia');
-// const btnAmerica = document.querySelector('.america');
-// const btnAfrica = document.querySelector('.africa');
-// const countriesDiv = document.querySelector('.countries');
-// const chart = document.querySelector('.chart');
-
-// const chart = document.getElementById('chart');
-
-//==========================================================
-
-
-// const africa = document.querySelector(".africa");
-// const america = document.querySelector(".america");
-// const asia = document.querySelector(".asia");
-// const europe = document.querySelector(".europe");
-// const oceania = document.querySelector(".oceania");
-// const btnBox = document.querySelector(".all-btn");
-// const allContinentBtn = document.querySelectorAll(".continent-btn");
-
-
-// let btn = document.querySelector(".btn");
-// let countries = document.querySelector(".countries");
-// let btnOfCountry = document.createElement("button");
+// In the beginning there was a chart
+// The code now looks MUCH better, but there's no chart 
+// due to unsuccessful conflict with the population arrays/object
 
 const spinner = document.querySelector('.spinner');
 const chartvas = document.querySelector('#chartvas');
@@ -46,12 +17,12 @@ let data = {}
 let buttons = []
 buttons = document.querySelectorAll('button');
 let container;
-// reset / init
 let lastClickedButton;
 let lockClick = false;
 
 
-// Get buttons- container if already exists
+// Get buttons-container if not exists
+
 if (container) {
     container = document.getElementById('country-buttons-container');
 } else if (!container) {
@@ -60,12 +31,12 @@ if (container) {
     document.body.appendChild(container);
 }
 
-document.addEventListener("click", async event => {
+// DOM Events delegate
 
+document.addEventListener("click", async event => {
     if (lockClick) {
         return;
     }
-
     const target = event.target;
     if (lastClickedButton === target) {
         return;
@@ -77,7 +48,7 @@ document.addEventListener("click", async event => {
     console.log("log targetValue", targetValue);
     if (targetType !== null) {
         lockClick = true;
-        spinner.classList.remove('display');
+        // spinner.classList.remove('display');
         try {
             await fetchDataHandler(targetType, targetValue)
                 .then(await UIHandler(targetType, targetValue))
@@ -89,6 +60,7 @@ document.addEventListener("click", async event => {
 });
 
 
+// ================ UIHandler =================
 
 const UIHandler = async (type, name) => {
     countriesData = [];
@@ -106,7 +78,8 @@ const UIHandler = async (type, name) => {
         }
         console.log("countriesData", countriesData)
 
-        // Generate buttons for each country
+// ----- Generate buttons for each country -----
+
         buttons = countriesData.map(country => {
             const button = document.createElement("button");
             button.textContent = country.name;
@@ -124,25 +97,10 @@ const UIHandler = async (type, name) => {
         });
         existingButtons = buttons;
     }
-
-    // if (type === "country") {
-    //     const cities = JSON.parse(localStorage.getItem(name))
-    //     console.log("cities", cities)
-    //     populationData = cities.map(city => {
-    //         return { name: city.city, population: city.population, year: city.year }
-    //     })
-    //     console.log("populationData", populationData)
-    //     // if (chartAxis) {
-    //     //     chartAxis.destroy();
-    //     // }
-    //     // chartAxis = await chartsHandler(populationData);
-    // }
-    // spinner.classList.add('display');
-
 }
 
+// ============= fetching Data =============
 
-// ==================== fetchDataHandler =========================
 const fetchDataHandler = async (type, name) => {
 
     if (localStorage.getItem(name)) {
@@ -176,6 +134,8 @@ const fetchDataHandler = async (type, name) => {
     }
 }
 
+// ================= data processor =================
+
 const dataProcessor = (data, type) => {
     switch (type) {
         case "continent":
@@ -191,68 +151,99 @@ const dataProcessor = (data, type) => {
             });
         case "country": 
             return data.data.map(city => {
-                let cityData = {
-                    name: city.city,
-                    population: city.populationCounts[0].population
-                };
+                // let cityData = {
+                //     name: city.city,
+                //     population: city.populationCounts
+                // };
+                citiesArr = data.map(city => city.name)
+                yearsArr = data.map(city => city.population.map(pop => pop.year)).flat()
+                populationData = data.map(city => city.population.map(pop => pop.value)).flat()
                 console.log("cityData", cityData)
+                console.log("citiesArr", citiesArr)
                 setLocalStorageItem(city.country, cityData);
                 return cityData;
             });
         default:
             throw new Error(`Invalid type: ${type}`);
-    }
-};
+        }
+}
+
 function setLocalStorageItem(name, values) {
     let existingData = localStorage.getItem(name) ? JSON.parse(localStorage.getItem(name)) : [];
     localStorage.setItem(name, JSON.stringify(existingData.concat(values)));
 }
 
+const getFromLocalStorage = key => {
+    try {
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : null;
+    } catch (error) {
+        console.error(`Error retrieving data from local storage: ${error}`);
+        return null;
+    }
+};
 
-// if (isChart === true) {
-//     chart.destroy();
+const setToLocalStorage = (key, value) => {
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+        console.error(`Error storing data in local storage: ${error}`);
+    }
+};
+
+
+
+
+
+
+
+
+
+// ========================================================================
+// const makeChart = (countries, population) => {
+//     if (chart != undefined) {
+//         chart.destroy()
+//     }
+//     const data = {
+//         labels: countries,
+//         datasets: [{
+//             label: 'population',
+//             backgroundColor: '#407076',
+//             borderColor: '#97B1A6',
+//             data: population,
+//         }]
+//     };
+
+//     const config = {
+//         type: 'bar',
+//         data: data,
+//         options: {}
+//     };
+
+//     chart = new Chart(
+//         document.getElementById('chartvas'),
+//         config
+//     );
 // }
 
-// printChart(country, citiesArr, populationArr, yearsArr) {
-//     // resetChart();
-//     return new Chart(chartvas, {
-//         type: "bar",
-//         data: {
-//             labels: [...citiesArr],
-//             datasets: [
-//                 {
-//                     label: yearsArr[0],
-//                     borderColor: [
-//                         "rgba(255,99,132,1)",
-//                         "rgba(54, 162, 235, 1)",
-//                         "rgba(255, 206, 86, 1)"
-//                     ],
-//                     backgroundColor: [
-//                         "rgba(255, 99, 132, 0.2)",
-//                         "rgba(54, 162, 235, 0.2)",
-//                         "rgba(255, 206, 86, 0.2)"
-//                     ],
-//                     data: [...populationArr],
-//                     borderWidth: 2
-//                 }
-//             ]
-//         },
-//         options: {
-//             plugins: {
-//                 title: {
-//                     display: true,
-//                     text: country
-//                 }
+
+// new Chart(ctx, {
+//     type: "line",
+//     data: {
+//         labels: newArray,
+//         datasets: [
+//             {
+//                 label: "population of the countries",
+//                 data: population,
+//                 borderWidth: 1,
 //             },
-//             scales: {
-//                 y: {
-//                     beginAtZero: true
-//                 }
-//             }
-//         }
-//     });
-// }
-
-
-// draw(["Israel","France"],[500000, 600000])
-printChart('Israel',['Tel-Aviv','Eilat'],['200000', '300000'],['2020']);
+//         ],
+//     },
+//     options: {
+//         scales: {
+//             y: {
+//                 beginAtZero: true,
+//             },
+//         },
+//     },
+// });
