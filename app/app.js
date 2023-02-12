@@ -1,5 +1,10 @@
 
-async function getData(dataType, name) {
+requestDataHandler = async (requestedData, name) => {
+
+
+
+
+async function fetchData(requestedData, name) {
     let url = '';
     const method = "GET";
     const headers = {
@@ -14,8 +19,13 @@ async function getData(dataType, name) {
         // citiesPopulation
         // url = "https://countriesnow.space/api/v0.1/countries/population/cities"
 
-        //countriesPopulation
+        //countriesPopulations
         // url  = "https://countriesnow.space/api/v0.1/countries/countries/population"
+
+
+       //countryPopulation
+        url = "https://countriesnow.space/api/v0.1/countries/countries/population"
+        // country.name // .common
 
         const response = await fetch(url, { method, headers, body });
         const json = await response.json();
@@ -24,10 +34,8 @@ async function getData(dataType, name) {
         console.error(error);
     }
 
-    
 
-
-    switch (dataType) {
+    switch (requestedData) {
         case 'continent':
             url = `https://restcountries.com/v2/region/${name}`;
             break;
@@ -58,11 +66,11 @@ async function getData(dataType, name) {
         const json = await response.json();
         console.log("json", json)
 
-        if(dataType === 'country'){        
+        if(requestedData === 'country'){        
             localStorage.setItem('country', JSON.stringify(json))
             localStorage.setItem('countryName', name)
             localStorage.setItem('countryData', JSON.stringify(json.data))
-        } else if(dataType === 'cities'){
+        } else if(requestedData === 'cities'){
             localStorage.setItem('city', JSON.stringify(json))
             localStorage.setItem('cityName', name)
             localStorage.setItem('cityData', JSON.stringify(json.data))
@@ -88,20 +96,16 @@ if (container) {
     document.body.appendChild(container);
 }
 
-
 let existingButtons = container.querySelectorAll('button');
 let countryNames = [];
 let cityNames = []
 let currentCountryButtons = [];
 let lastClickedButton;
 
-
-
 document.addEventListener("click", async event => {
     const target = event.target;
 
     console.log('document.addEventListener - target', target)
-
 
     // Check if the same button was clicked
     if (lastClickedButton === target) {
@@ -113,7 +117,7 @@ document.addEventListener("click", async event => {
     const targetValue = target.getAttribute('value');
     const targetType = target.getAttribute('type');
 
-    const data = await getData(targetType, targetValue);
+    const data = await fetchData(targetType, targetValue);
 
     console.log("typeofData", typeof data)
 
@@ -145,6 +149,7 @@ function processData(data) {
     return processedData;
 }
 
+// =================== clickEventsHandler ===================
 
 function handleClick(requestedType) {
     // let buttons = []
