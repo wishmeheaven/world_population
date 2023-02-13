@@ -1,6 +1,36 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700;900&display=swap');
 
+
+/* Extra small devices (phones, 600px and down) */
+@media only screen and (max-width: 600px) {
+
+    .continent-container {
+        min-height: fit-content;
+        width:100%;
+        min-width: min-content;
+        max-width: min-content;
+        padding: .5rem;
+    }
+    .continent-buttons {
+        min-height: fit-content;
+        padding: .5rem;        
+    }
+    .country-buttons {
+        width:100%;
+        height: fit-content;
+        min-height: max-content;
+        min-width: fit-content;
+        padding: .5rem;
+    }
+    #country-buttons-container {
+        min-height: fit-content;
+        width:100%;
+        min-width: fit-content;
+        padding: .5rem;
+    }
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -11,64 +41,17 @@
 body {
     width: 100%;
     height: 100%;
-    margin: 0 auto;
+    min-height: 50rem;
     display: flex;
+    /* padding: 1.5rem; */
+    align-items: center;
     flex-direction: column;
-    box-shadow: inset 2px 2px 15px 2px #0d0152;
+    /* justify-content: space-around; */
+    /* box-shadow: inset 2px 2px 15px 2px #0d0152; */
+    box-shadow: inset 2px 2px 15px 2px  #ffbb00;
     background : linear-gradient(140deg, #ff05bc, #3c00ff) no-repeat;
 }
 
-.chart, #chartvas {
-    margin-top: 2rem;
-    width: 70vw;
-    height: 60vh;
-    border-radius: 25px;
-    background-color: #ffffff2a;  
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center; 
-}
-
-.container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    text-align: center;
-    padding: 2rem;
-}
-
-#continent-buttons-container,
- #country-buttons-container, .container {
-    height: max-content;
-    display: flex;
-     align-items: center; 
-    flex-wrap: wrap; 
-    justify-content: space-between;
-    text-align: center;
-}
-
-#continent-buttons-container button {
-    text-align: center;
-    top: 0;
-    width: 100%;
-    height: 2.5rem;
-    border-radius: 15px;
-    font-size: 1rem;
-    background-color: #10205c8a;
-    box-shadow: inset 0px 0px 8px 3px #ffffff;
-    color: #ffffff;
-    cursor: pointer;
-}
-.continent {
-    width: 100%;
-    height: 3rem;
-    text-align: center;
-    justify-content: center;
-}
 
 button, input{
   font-family: 'Poppins', sans-serif;
@@ -82,20 +65,61 @@ h1 {
     color:  #ffffff;
     text-shadow: #0d0152 2px 1px 2px;   
     font-size: 2rem;
-    padding: 2rem;
+    padding-top: 2rem;
+}
+
+.container {
+    width:100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    text-align: center;
+}
+
+.chart-container {  
+ width: 100%;
+ height: 100%;
+ min-height: max-content;
+ margin: 1.5rem 0;
+}
+
+/* make responsive */
+.chart {
+    width: calc(97% - .65rem);
+    padding: 1rem;
+    height: 30rem;
+    min-height: max-content;
+    /* min-width: fit-content;  */
+    border-radius: 30px;
+    background-color: #ffffff69;  
+    /* align-items: end; */
+    /* display: flex;     */
+    box-shadow: inset #ffa600 0px 0px 20px 10px;
+    /* flex-direction: column; */
+}
+
+.continent-container {
+    display: flex; 
+    height: max-content;
+    padding: 1rem;
+    flex-direction: column; 
+    align-items: center;
+    justify-content: space-around;
+    text-align: center;
 }
 
 button { 
     text-align: center;
     border: none;
-    margin: 1rem;
-    padding: 0 1.5rem;
-    width: max-content;
-    height: 2.5rem;
+    /* margin: .25rem; */
+    padding: 0 1rem;
+    /* width: max-content; */
+    height: 2rem;
     border-radius: 15px;
-    font-size: 1rem;
-    background-color: #10205c8a;
-    box-shadow: inset 0px 0px 8px 3px #ffffff;
+    font-size: .85rem;
+    background-color: #10205c26;
+    box-shadow: inset 0px 0px 15px 1px #ffffff;
     color: #ffffff;
     cursor: pointer;
 }
@@ -105,21 +129,53 @@ button:hover {
     /* box-shadow: inset 0px 0px 8px 3px #ff3c00; */
     /* box-shadow: inset 0px 0px 8px 3px #00ff4c; 
     box-shadow: inset 0px 0px 8px 3px #00ffd9; */
-    box-shadow: inset 0px 0px 8px 3px #d167ff;
-    transform: scale(1.2, 1.2);
-}
+    /* box-shadow: inset 0px 0px 8px 3px #d167ff; */
+    box-shadow: inset #ffcc00 0px 0px 15px 1px; 
+    color: #ffcc00;
+     transform: scale(1.05, 1.15);
+    }
 
 button:active {
-    box-shadow: 0px 0px 23px 6px #ffcc00;
+    box-shadow: 0px 0px 15px 1px #ffcc00,
+    inset 0px 0px 40px 0px #4f00bd54;
     /* background-color: #ff3c00; */
     /* background-color: #ff006a; */
     /* background-color: #00ff4c;
     background-color: #00ffd9; */
-    background-color: #8d00c9;
-
+    /* background-color: #8d00c9; */
+     transform: scale(.9, .8);
+    color: #ffffff;
+    /* color: #ffcc00; */
 }
 
+.clicked{
+    box-shadow: inset #ffcc00 0px 0px 15px 1px; 
+    color: #ffcc00;
+}
 
+.continent-buttons {
+    text-align: center;
+    border: none;
+    padding: 0 1.5rem;
+    width: 100%;
+    height: 3.5rem;
+    margin: .22rem;
+    border-radius: 8px;
+    /* box-shadow: inset 0px 0px 8px 3px #ffffff; */
+}
+
+.country-buttons {
+    margin: .25rem;
+    /* box-shadow: inset 0px 0px 8px 3px #ffffff; */
+}
+#country-buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    /* align-items: center; */
+    text-align: center;
+    padding: 0 2rem;
+}
 
 p a {
     font-size: 1rem;
@@ -141,3 +197,19 @@ glow
     background-color: #ff006a;
     background-color: #00ffa6;
 */
+/*
+    change countries buttons color
+    and chart box shadow color
+    with each color on continent
+
+    with animation
+
+
+    ================
+
+    - changeable chart type 
+    - flags
+
+
+*/
+

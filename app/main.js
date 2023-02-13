@@ -1,12 +1,11 @@
 'use strict';
 
-const continentsContainer = document.querySelector('.continent');
+const continentsContainer = document.querySelector('.continent-container');
 // const spinner = document.querySelector('.spinner');
 const ctx = document.querySelector('#chartvas');
-// const chart = document.querySelector('.chart');
+const charter = document.querySelector('.chart-container');
 let myChart;
 let button
-let myLineChart;
 let chartAxis = false;
 let countriesData = [];  // country : name, population, flag
 let populationData = [] // population : city, population, year
@@ -17,6 +16,7 @@ buttons = document.querySelectorAll('button');
 let countryButtonsContainer;
 let lastClickedButton;
 let lockClick = false;
+let chartCleared = true;
 
 
 (async function getAllContinents() {
@@ -34,9 +34,18 @@ document.body.append(countryButtonsContainer);
 // DOM Events delegate
 
 document.addEventListener("click", async (e) => {
-    console.log(e.target);
     if (lockClick) return;
     if (e.target.tagName !== "BUTTON") return;
+    if(e.target === lastClickedButton) {
+        e.target.classList.toggle('clicked');
+        console.log("chartCleared", chartCleared);
+        chartCleared = !chartCleared;
+    } else {
+        if(lastClickedButton)lastClickedButton.classList.remove('clicked');
+        e.target.classList.toggle('clicked');
+        lastClickedButton = e.target;
+        chartCleared = true;
+    }
     const targetName = e.target.getAttribute('data-name');
     const targetType = e.target.getAttribute('data-type');
     lockClick = true;
@@ -53,12 +62,13 @@ document.addEventListener("click", async (e) => {
 // ================ UIHandler =================
 
 async function clickHandler(type, name) {
-    console.log(arguments);
-    switch (type) {
+    // console.log(arguments);
+    if(chartCleared) {
+    switch (type) {    
         case "continent":
             const continentData = await getCountriesOfContinent(name);
             const displayData = massageDataForContinent(continentData);
-            generateCountriesButtons(continentData);
+            generateCountriesButtons(continentData);           
             generateContinentChart(displayData, name);
             break;
         case "country":
@@ -70,7 +80,8 @@ async function clickHandler(type, name) {
             const cityData = await getCity(name);
             generateCityChart(cityData);
             break;
-    }
+        }
+    } else clearChart()
 }
 
 async function getContinents() {
@@ -88,17 +99,24 @@ async function getCountriesOfContinent(continentName) {
     // fetch countries of continent from API
     return await fetchCountriesOfContinentFromAPI(continentName);
 }
+async function getCitiesOfCountry(countryName) {
+    // get cities of country from local storage
+    const cities = JSON.parse(localStorage.getItem(countryName));
+    if (cities) return cities;
+    // fetch cities of country from API
+    return await fetchCitiesOfCountryFromAPI(countryName);
+}
 
 
 // ----- Generate buttons for each country -----
-function generateContinentsButtons(continents) {
+function generateContinentsButtons(conti nents) {
     buttons = continents.map(continent => {
         const button = document.createElement("button");
         button.textContent = continent;
         button.setAttribute("data-name", continent);
         button.setAttribute("data-type", "continent");
-        button.classList.add("button");
-        continentsContainer.appendChild(button);
+        button.classList.add("button", "continent-buttons");
+        continentsContainer.append(button);
     });
 }
 
@@ -109,7 +127,7 @@ function generateCountriesButtons(countries) {
         button.textContent = country.name.official;
         button.setAttribute("data-name", country.name.official);
         button.setAttribute("data-type", "country");
-        button.classList.add("button");
+        button.classList.add("button", "country-buttons");        
         countryButtonsContainer.appendChild(button);
     });
 }
@@ -127,12 +145,28 @@ async function fetchCountriesOfContinentFromAPI(continentName) {
     return await fetchDataFromAPI(url);
 }
 
+// {
+//     "error": false,
+//         "msg": "lagos with population",
+//             "data": ⊖{
+//         "city": "Lagos",
+//             "country": "Nigeria",
+//                 "populationCounts": ⊖[
+//            ⊖{
+//                         "year": "1991",
+//                         "value": "5195247",
+//                         "sex": "Both Sexes",
+//                         "reliabilty": "Final figure, complete"
+//                     }
+//                 ]
+//     }
+// }
 async function fetchCitiesOfCountryFromAPI(countryName) {
-    url = ``
+    url = `https://countriesnow.space/api/v0.1/countries/population/cities`
     return await fetchDataFromAPI(url);
 }
 
-async function fetchPopulationOfCityFromAPI(cityName) {
+async function fetchPopulationOfCityFromAPI(https://countriesnow.space/api/v0.1/countries/population/cities) {
     url = '';
     return await fetchDataFromAPI(url);
 }
@@ -175,9 +209,8 @@ function massageDataForContinent(data) {
 
 const dataProcessor = (data, type) => {
     switch (type) {
-
         case "country":
-            return data.data.map(city => { //  data.data.populationCount[i].year
+            return data.data.map(city => { // data.data.populationCount[i].year
                 let cityData = {
                     name: city.city,
                     population: city.populationCounts
@@ -218,13 +251,38 @@ function generateContinentChart(data, continentName) {
         },
         options: {
             plugins: { title: { text: continentName, display: true } },
-            pointBackgroundColor: "#fff",
+            // pointBackgroundColor: "#fff",
             maintainAspectRatio: false,
         },
     };
     if (myChart?.ctx) myChart.destroy();
     myChart = new Chart(ctx, config);
 }
+// without async
+// without null
+function clearChart() {
+    // console.log("clearChart", clearChart)
+    if (myChart?.ctx) {
+    myChart.destroy();
+} 
+
+            // myChart.destroy();
+            // myChart = null;
+            // return true;
+
+        // ctx.remove(); // this is my <canvas> element
+        // charter.append('<canvas id="chartvas"></canvas>');
+        // canvas = document.querySelector("#chartvas");
+        // ctx = canvas.getContext('2d');
+        // ctx.canvas.width = charter.width(); // resize to parent width
+        // ctx.canvas.height = charter.height(); // resize to parent height
+        // var x = canvas.width / 2;
+        // var y = canvas.height / 2;
+        // // ctx.font = '10pt Verdana';
+        // ctx.textAlign = 'center';
+        // ctx.fillText('This text is centered on the canvas', x, y);
+
+};
 
 
 // =======================================
