@@ -1,12 +1,10 @@
 'use strict';
 
-// In the beginning there was a chart
-// The code now looks MUCH better, but there's no chart 
-// due to unsuccessful conflict with the population arrays/object
-
-const spinner = document.querySelector('.spinner');
-const chartvas = document.querySelector('#chartvas');
-const chart = document.querySelector('.chart');
+const continentsContainer = document.querySelector('.continent');
+// const spinner = document.querySelector('.spinner');
+const ctx = document.querySelector('#chartvas');
+// const chart = document.querySelector('.chart');
+let myChart;
 let button
 let myLineChart;
 let chartAxis = false;
@@ -16,234 +14,275 @@ let existingButtons = []
 let data = {}
 let buttons = []
 buttons = document.querySelectorAll('button');
-let container;
+let countryButtonsContainer;
 let lastClickedButton;
 let lockClick = false;
 
 
+(async function getAllContinents() {
+    const continentData = await getContinents();
+    const displayData = massageDataStart(continentData);
+    generateContinentsButtons(displayData);
+})();
+
 // Get buttons-container if not exists
 
-if (container) {
-    container = document.getElementById('country-buttons-container');
-} else if (!container) {
-    container = document.createElement('div');
-    container.setAttribute('id', 'country-buttons-container');
-    document.body.appendChild(container);
-}
+countryButtonsContainer = document.createElement('div');
+countryButtonsContainer.id = "country-buttons-container";
+document.body.append(countryButtonsContainer);
 
 // DOM Events delegate
 
-document.addEventListener("click", async event => {
-    if (lockClick) {
-        return;
-    }
-    const target = event.target;
-    if (lastClickedButton === target) {
-        return;
-    }
-    lastClickedButton = target;
-    const targetValue = target.getAttribute('value');
-    const targetType = target.getAttribute('type');
-    console.log("log targetType", targetType);
-    console.log("log targetValue", targetValue);
-    if (targetType !== null) {
-        lockClick = true;
-        // spinner.classList.remove('display');
-        try {
-            await fetchDataHandler(targetType, targetValue)
-                .then(await UIHandler(targetType, targetValue))
-            lockClick = false;
-        } catch (err) {
-            console.log("error", err)
-        }
+document.addEventListener("click", async (e) => {
+    console.log(e.target);
+    if (lockClick) return;
+    if (e.target.tagName !== "BUTTON") return;
+    const targetName = e.target.getAttribute('data-name');
+    const targetType = e.target.getAttribute('data-type');
+    lockClick = true;
+    // spinner.classList.remove('display');
+    try {
+        await clickHandler(targetType, targetName);
+        lockClick = false;
+    } catch (err) {
+        console.log("error", err)
+        lockClick = false;
     }
 });
 
-
 // ================ UIHandler =================
 
-const UIHandler = async (type, name) => {
-    countriesData = [];
-    console.log("type", type);
-    console.log("name", name)
-
-    if (type === "continent") {
-        const countries = JSON.parse(localStorage.getItem(name))
-        console.log("countries", countries)
-        for (const [index, country] of Object.entries(countries)) {
-            const countryName = country.name;
-            const countryPopulation = country.population;
-            const countryFlag = country.flag;
-            countriesData.push({ name: countryName, population: countryPopulation, flag: countryFlag });
-        }
-        console.log("countriesData", countriesData)
-
-// ----- Generate buttons for each country -----
-
-        buttons = countriesData.map(country => {
-            const button = document.createElement("button");
-            button.textContent = country.name;
-            button.setAttribute("value", country.name);
-            button.setAttribute("type", "country");
-            button.classList.add("button");
-            return button;
-        });
-        console.log("buttons", buttons)
-        if (existingButtons.length > 0) {
-            existingButtons.forEach(button => button.remove());
-        }
-        buttons.forEach(button => {
-            container.appendChild(button);
-        });
-        existingButtons = buttons;
+async function clickHandler(type, name) {
+    console.log(arguments);
+    switch (type) {
+        case "continent":
+            const continentData = await getCountriesOfContinent(name);
+            const displayData = massageDataForContinent(continentData);
+            generateCountriesButtons(continentData);
+            generateContinentChart(displayData, name);
+            break;
+        case "country":
+            const citiesData = await getCitiesOfCountry(name);
+            generateCountryChart(citiesData);
+            generateCityButtons(citiesData);
+            break;
+        case "city":
+            const cityData = await getCity(name);
+            generateCityChart(cityData);
+            break;
     }
 }
 
+async function getContinents() {
+    // get countries of continent from local storage
+    const continents = JSON.parse(localStorage.getItem("continents"));
+    if (continents) return continents;
+    // fetch countries of continent from API
+    return await fetchContinentsFromAPI();
+}
+
+async function getCountriesOfContinent(continentName) {
+    // get countries of continent from local storage
+    const countries = JSON.parse(localStorage.getItem(continentName));
+    if (countries) return countries;
+    // fetch countries of continent from API
+    return await fetchCountriesOfContinentFromAPI(continentName);
+}
+
+
+// ----- Generate buttons for each country -----
+function generateContinentsButtons(continents) {
+    buttons = continents.map(continent => {
+        const button = document.createElement("button");
+        button.textContent = continent;
+        button.setAttribute("data-name", continent);
+        button.setAttribute("data-type", "continent");
+        button.classList.add("button");
+        continentsContainer.appendChild(button);
+    });
+}
+
+function generateCountriesButtons(countries) {
+    countryButtonsContainer.innerHTML = '';
+    buttons = countries.map(country => {
+        const button = document.createElement("button");
+        button.textContent = country.name.official;
+        button.setAttribute("data-name", country.name.official);
+        button.setAttribute("data-type", "country");
+        button.classList.add("button");
+        countryButtonsContainer.appendChild(button);
+    });
+}
+
+
 // ============= fetching Data =============
 
-const fetchDataHandler = async (type, name) => {
+async function fetchContinentsFromAPI() {
+    const url = `https://restcountries.com/v3.1/all`
+    return await fetchDataFromAPI(url);
+}
 
-    if (localStorage.getItem(name)) {
-        console.log("on local storage", name)
-        return JSON.parse(localStorage.getItem(name));
-    }
-    console.log("not (yet) on local storage")
-    let url = '';
-    switch (type) {
-        case 'continent':
-            url = `https://restcountries.com/v3.1/region/${name}`
-            break;
-        case 'country':
-            url = 'https://countriesnow.space/api/v0.1/countries/population/cities';
-            break;
-        default:
-            throw new Error(`Invalid type: ${type}`);
-    }
+async function fetchCountriesOfContinentFromAPI(continentName) {
+    const url = `https://restcountries.com/v3.1/region/${continentName}`
+    return await fetchDataFromAPI(url);
+}
+
+async function fetchCitiesOfCountryFromAPI(countryName) {
+    url = ``
+    return await fetchDataFromAPI(url);
+}
+
+async function fetchPopulationOfCityFromAPI(cityName) {
+    url = '';
+    return await fetchDataFromAPI(url);
+}
+
+async function fetchDataFromAPI(url) {
+    const options = {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json; charset=UTF-8",
+        },
+    };
     try {
-        let data = [];
-        const method = "GET";
-        const headers = {
-            "Content-Type": "application/json"
-        };
-        let body = null;
-            const response = await fetch(url, { method, headers, body });
-            data = await response.json();
-            return dataProcessor(data, type)
+        const response = await fetch(url, options);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        return data;
     } catch (err) {
         console.error("error", err);
     }
 }
 
+
 // ================= data processor =================
+function massageDataStart(data) {
+    return Array.from( data.reduce((continents, country) => 
+        continents.add(country.continents.join(''))
+    , new Set()));
+}
+
+function massageDataForContinent(data) {
+    return data.map(country => {
+        return {
+            name: country.name.official,
+            population: country.population,
+            flag: country.flags ? country.flags.png : null,
+        };
+    });
+}
 
 const dataProcessor = (data, type) => {
     switch (type) {
-        case "continent":
-            return data.map(country => {
-                let countryData = {
-                    name: country.name.common,
-                    population: country.population,
-                    flag: country.flags ? country.flags.png : null,
-                    continent: country.region
+
+        case "country":
+            return data.data.map(city => { //  data.data.populationCount[i].year
+                let cityData = {
+                    name: city.city,
+                    population: city.populationCounts
                 };
-                setLocalStorageItem(country.region, countryData);
-                return countryData;
-            });
-        case "country": 
-            return data.data.map(city => {
-                // let cityData = {
-                //     name: city.city,
-                //     population: city.populationCounts
-                // };
                 citiesArr = data.map(city => city.name)
                 yearsArr = data.map(city => city.population.map(pop => pop.year)).flat()
                 populationData = data.map(city => city.population.map(pop => pop.value)).flat()
                 console.log("cityData", cityData)
                 console.log("citiesArr", citiesArr)
-                setLocalStorageItem(city.country, cityData);
+                // setToLocalStorage(city.country, cityData);
                 return cityData;
             });
         default:
             throw new Error(`Invalid type: ${type}`);
-        }
-}
-
-function setLocalStorageItem(name, values) {
-    let existingData = localStorage.getItem(name) ? JSON.parse(localStorage.getItem(name)) : [];
-    localStorage.setItem(name, JSON.stringify(existingData.concat(values)));
-}
-
-const getFromLocalStorage = key => {
-    try {
-        const data = localStorage.getItem(key);
-        return data ? JSON.parse(data) : null;
-    } catch (error) {
-        console.error(`Error retrieving data from local storage: ${error}`);
-        return null;
     }
-};
-
-const setToLocalStorage = (key, value) => {
-    try {
-        localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-        console.error(`Error storing data in local storage: ${error}`);
-    }
-};
-
-
-
-
-
-
-
+}
 
 
 // ========================================================================
-// const makeChart = (countries, population) => {
-//     if (chart != undefined) {
-//         chart.destroy()
+function generateContinentChart(data, continentName) {
+    const config = {
+        type: "bar",
+        data: {
+            labels: data.map((country) => country.name.slice(0, 15)),
+            datasets: [
+                {
+                    label: "population",
+                    data: data.map((country) => country.population),
+                    borderColor: "#dd3300",
+                    backgroundColor: "#dd330066",
+                    fill: true,
+                    radius: 8,
+                    hoverRadius: 12,
+                    borderWidth: 1,
+                    hoverBorderWidth: 2,
+                },
+            ],
+        },
+        options: {
+            plugins: { title: { text: continentName, display: true } },
+            pointBackgroundColor: "#fff",
+            maintainAspectRatio: false,
+        },
+    };
+    if (myChart?.ctx) myChart.destroy();
+    myChart = new Chart(ctx, config);
+}
+
+
+// =======================================
+
+
+// const UIHandler = async (type, name) => {
+//     if(type === 'init'){
+//         await renderContinents()
 //     }
-//     const data = {
-//         labels: countries,
-//         datasets: [{
-//             label: 'population',
-//             backgroundColor: '#407076',
-//             borderColor: '#97B1A6',
-//             data: population,
-//         }]
-//     };
+//     if(type === 'continent') {
+//         await renderCountries();
+//     } else if (type === 'country') {
+//         await renderCities(name);
+//     }
+// }
 
-//     const config = {
-//         type: 'bar',
-//         data: data,
-//         options: {}
-//     };
+// function renderContinents(){
+//    const continentsUI = document.querySelector('.continent')
+// //    const continentsNames =  getAllContinents()
+// }
 
-//     chart = new Chart(
-//         document.getElementById('chartvas'),
-//         config
-//     );
+// // Use try-catch block to handle exceptions when accessing local storage
+// function renderCountries() {
+//     // Use try-catch block to handle exceptions when accessing local storage
+//     try {
+//         // Check if local storage is supported in the browser
+//         if (typeof (Storage) !== "undefined") {
+//             // Retrieve the country data array from local storage
+//             let countryDataArray = JSON.parse(localStorage.getItem('countryData'));
+//             // If the data exists in local storage, render the UI elements
+//             if (countryDataArray) {
+//                 // Loop through the country data array and create a button for each country
+//                 countryDataArray.forEach(country => {
+//                     let button = document.createElement("button");
+//                     button.innerHTML = country.name;
+//                     button.classList.add("country-button");
+//                     // Add event listener for the button to display country information
+//                     button.addEventListener("click", () => {
+//                         displayCountryInfo(country);
+//                     });
+//                     // Append the button to the container element
+//                     let container = document.getElementById("container");
+//                     container.appendChild(button);
+//                 })}}}catch (error) {
+//         console.error(error);
+//     }
 // }
 
 
-// new Chart(ctx, {
-//     type: "line",
-//     data: {
-//         labels: newArray,
-//         datasets: [
-//             {
-//                 label: "population of the countries",
-//                 data: population,
-//                 borderWidth: 1,
-//             },
-//         ],
-//     },
-//     options: {
-//         scales: {
-//             y: {
-//                 beginAtZero: true,
-//             },
-//         },
-//     },
-// });
+// // Function to display country information when the button is clicked
+// function displayCountryInfo(country) {
+//     // Render the country information in the UI
+//     let name = document.getElementById("name");
+//     name.innerHTML = country.name;
+//     let population = document.getElementById("population");
+//     population.innerHTML = country.population;
+//     let flag = document.getElementById("flag");
+//     flag.src = country.flag;
+//     let continent = document.getElementById("continent");
+//     continent.innerHTML = country.continent;
+// }
