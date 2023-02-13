@@ -158,9 +158,9 @@ async function fetchDataFromAPI(url) {
 
 // ================= data processor =================
 function massageDataStart(data) {
-    return Array.from( data.reduce((continents, country) => 
+    return Array.from(data.reduce((continents, country) =>
         continents.add(country.continents.join(''))
-    , new Set()));
+        , new Set()));
 }
 
 function massageDataForContinent(data) {
@@ -228,61 +228,3 @@ function generateContinentChart(data, continentName) {
 
 
 // =======================================
-
-
-// const UIHandler = async (type, name) => {
-//     if(type === 'init'){
-//         await renderContinents()
-//     }
-//     if(type === 'continent') {
-//         await renderCountries();
-//     } else if (type === 'country') {
-//         await renderCities(name);
-//     }
-// }
-
-// function renderContinents(){
-//    const continentsUI = document.querySelector('.continent')
-// //    const continentsNames =  getAllContinents()
-// }
-
-// // Use try-catch block to handle exceptions when accessing local storage
-// function renderCountries() {
-//     // Use try-catch block to handle exceptions when accessing local storage
-//     try {
-//         // Check if local storage is supported in the browser
-//         if (typeof (Storage) !== "undefined") {
-//             // Retrieve the country data array from local storage
-//             let countryDataArray = JSON.parse(localStorage.getItem('countryData'));
-//             // If the data exists in local storage, render the UI elements
-//             if (countryDataArray) {
-//                 // Loop through the country data array and create a button for each country
-//                 countryDataArray.forEach(country => {
-//                     let button = document.createElement("button");
-//                     button.innerHTML = country.name;
-//                     button.classList.add("country-button");
-//                     // Add event listener for the button to display country information
-//                     button.addEventListener("click", () => {
-//                         displayCountryInfo(country);
-//                     });
-//                     // Append the button to the container element
-//                     let container = document.getElementById("container");
-//                     container.appendChild(button);
-//                 })}}}catch (error) {
-//         console.error(error);
-//     }
-// }
-
-
-// // Function to display country information when the button is clicked
-// function displayCountryInfo(country) {
-//     // Render the country information in the UI
-//     let name = document.getElementById("name");
-//     name.innerHTML = country.name;
-//     let population = document.getElementById("population");
-//     population.innerHTML = country.population;
-//     let flag = document.getElementById("flag");
-//     flag.src = country.flag;
-//     let continent = document.getElementById("continent");
-//     continent.innerHTML = country.continent;
-// }
